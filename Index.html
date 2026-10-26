@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Glass Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+        }
+
+        .calculator {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            width: 320px;
+        }
+
+        .display {
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        .history {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            min-height: 20px;
+        }
+
+        .current-input {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            padding: 16px;
+            border: none;
+            outline: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.07);
+            color: #ffffff;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .operator {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .operator:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        .equal {
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            grid-row: span 2;
+            height: 100%;
+        }
+
+        .equal:hover {
+            background: linear-gradient(135deg, #0ea5e9, #0369a1);
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        .clear {
+            color: #f43f5e;
+            background: rgba(244, 63, 94, 0.1);
+        }
+
+        .clear:hover {
+            background: rgba(244, 63, 94, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="display">
+            <div class="history" id="history"></div>
+            <div class="current-input" id="currentInput">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="clearAll()">AC</button>
+            <button onclick="deleteDigit()">DEL</button>
+            <button class="operator" onclick="appendOperator('%')">%</button>
+            <button class="operator" onclick="appendOperator('/')">÷</button>
+            
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
+            
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+            
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <button onclick="appendNumber('0')" class="zero">0</button>
+            <button onclick="appendDot()">.</button>
+            <button class="equal" onclick="calculate()">=</button>
+
+            <!-- Extra Smart Function Buttons Row -->
+            <button class="operator" onclick="appendSquare()">x²</button>
+            <button class="operator" onclick="appendSquareRoot()">√</button>
+        </div>
+    </div>
+
+    <script>
+        const currentInputEl = document.getElementById('currentInput');
+        const historyEl = document.getElementById('history');
+        let currentInput = '0';
+        let history = '';
+        let resetScreen = false;
+
+        function updateDisplay() {
+            currentInputEl.textContent = currentInput;
+            historyEl.textContent = history;
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || resetScreen) {
+                currentInput = number;
+                resetScreen = false;
+            } else {
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (resetScreen) resetScreen = false;
+            const lastChar = currentInput.slice(-1);
+            if (['+', '-', '*', '/', '%'].includes(lastChar)) {
+                currentInput = currentInput.slice(0, -1);
+            }
+            currentInput += op;
+            updateDisplay();
+        }
+
+        function appendDot() {
+            if (resetScreen) {
+                currentInput = '0.';
+                resetScreen = false;
+                updateDisplay();
+                return;
+            }
+            const parts = currentInput.split(/[\+\-\*\/]/);
+            const lastPart = parts[parts.length - 1];
+            if (!lastPart.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            history = '';
+            updateDisplay();
+        }
+
+        function deleteDigit() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function calculate() {
+            try {
+                history = currentInput;
+                // Replace visual signs with JavaScript operators
+                let expression = currentInput.replace(/×/g, '*').replace(/÷/g, '/');
+                let result = eval(expression);
+                
+                if (!isFinite(result)) {
+                    throw new Error("Math Error");
+                }
+                
+                currentInput = String(parseFloat(result.toFixed(8)));
+                resetScreen = true;
+                updateDisplay();
+            } catch (error) {
+                currentInput = "Error";
+                resetScreen = true;
+                updateDisplay();
+            }
+        }
+
+        function appendSquare() {
+            try {
+                let val = eval(currentInput.replace(/×/g, '*').replace(/÷/g, '/'));
+                history = `(${currentInput})²`;
+                let result = val * val;
+                currentInput = String(parseFloat(result.toFixed(8)));
+                resetScreen = true;
+                updateDisplay();
+            } catch (e) {
+                currentInput = "Error";
+                updateDisplay();
+            }
+        }
+
+        function appendSquareRoot() {
+            try {
+                let val = eval(currentInput.replace(/×/g, '*').replace(/÷/g, '/'));
+                if (val < 0) throw new Error("Invalid");
+                history = `√(${currentInput})`;
+                let result = Math.sqrt(val);
+                currentInput = String(parseFloat(result.toFixed(8)));
+                resetScreen = true;
+                updateDisplay();
+            } catch (e) {
+                currentInput = "Error";
+                updateDisplay();
+            }
+        }
+    </script>
+</body>
+  </html>
+  
